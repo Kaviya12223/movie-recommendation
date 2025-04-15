@@ -1,0 +1,41 @@
+name: CI/CD Pipeline for Movie Recommender System
+
+on:
+  push:
+    branches:
+      - main  # Trigger the pipeline when there's a push to the main branch
+  pull_request:
+    branches:
+      - main  # Trigger the pipeline for pull requests to the main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu image
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2  # Checkout the code from the repository
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.10'  # Use Python 3.10
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt  # Install dependencies from requirements.txt
+
+    - name: Run tests
+      run: |
+        pytest  # If you have tests, run them. You can replace with your testing framework
+
+    - name: Build Docker image
+      run: |
+        docker build -t movie-recommender .
+
+    - name: Push Docker image to DockerHub
+      run: |
+        docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+        docker tag movie-recommender:latest ${{ secrets.DOCKER_USERNAME }}/movie-recommender:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/movie-recommender:latest
